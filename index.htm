@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WeDoCare | Health & Nutrition</title>
+  <meta name="theme-color" content="#059669">
+  <meta name="description" content="WeDoCare nutrition plans and healthy meal inspiration.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/wecare-icon-192.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/wecare-icon-192.svg">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    [hidden] { display: none !important; }
+    .photo-background {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+    .photo-slide {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+    }
+    .photo-slide-active {
+      opacity: 1;
+    }
+    .photo-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(rgba(6, 78, 59, 0.48), rgba(15, 23, 42, 0.54));
+    }
+    .login-content {
+      position: relative;
+      z-index: 2;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .photo-slide { transition: none; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex flex-col min-h-screen">
+  <section id="loginScreen" class="photo-background min-h-screen flex items-center justify-center px-4 py-12">
+    <div id="photoSlideA" class="photo-slide photo-slide-active" style="background-image: url('./assets/wecare-background.jpg')" aria-hidden="true"></div>
+    <div id="photoSlideB" class="photo-slide" aria-hidden="true"></div>
+    <div class="photo-overlay" aria-hidden="true"></div>
+    <div class="login-content w-full max-w-md">
+      <div class="text-center mb-8">
+        <p class="text-4xl font-extrabold tracking-tight text-white drop-shadow-lg">WeDoCare</p>
+        <h1 class="text-2xl font-bold text-white mt-6 drop-shadow">Welcome</h1>
+        <p class="text-white/90 mt-2 drop-shadow">Sign in to continue to your nutrition plans.</p>
+      </div>
+      <form id="accountForm" class="bg-white border border-slate-200 rounded-2xl p-6 shadow-lg">
+        <h2 id="accountTitle" class="text-xl font-bold text-slate-900 mb-5">Sign in</h2>
+        <label id="accountIdentifierLabel" for="accountIdentifier" class="block text-sm font-semibold text-slate-700 mb-2">Username or email address</label>
+        <input
+          id="accountIdentifier"
+          name="identifier"
+          type="text"
+          autocomplete="username"
+          required
+          class="w-full border border-slate-300 rounded-lg px-4 py-3 mb-5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          placeholder="Username or you@example.com"
+        >
+
+        <div id="accountEmailGroup" hidden>
+          <label for="accountEmail" class="block text-sm font-semibold text-slate-700 mb-2">Email for verification and recovery</label>
+          <input
+            id="accountEmail"
+            name="email"
+            type="email"
+            autocomplete="email"
+            class="w-full border border-slate-300 rounded-lg px-4 py-3 mb-5 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            placeholder="you@example.com"
+          >
+        </div>
+
+        <div id="accountPasswordGroup">
+          <label id="accountPasswordLabel" for="accountPassword" class="block text-sm font-semibold text-slate-700 mb-2">Password</label>
+          <input
+            id="accountPassword"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            minlength="6"
+            maxlength="10"
+            pattern="(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]{6,10}"
+            title="Use 6–10 letters and numbers, including at least one of each."
+            class="w-full border border-slate-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            placeholder="6–10 letters and numbers"
+          >
+          <p id="accountPasswordHelp" class="text-xs text-slate-500 mt-2">Use 6–10 characters, with at least one letter and one number.</p>
+        </div>
+
+        <button id="accountSubmit" type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-xl mt-6 transition">
+          Sign in
+        </button>
+        <p id="accountMessage" class="text-sm text-slate-700 mt-4" role="status" aria-live="polite"></p>
+        <button id="forgotPasswordButton" type="button" class="w-full text-sm font-semibold text-emerald-700 hover:text-emerald-800 underline underline-offset-2 mt-4">
+          Forgot password?
+        </button>
+        <button id="installButton" type="button" hidden class="w-full border border-emerald-600 text-emerald-700 hover:bg-emerald-50 font-semibold px-6 py-3 rounded-xl mt-3 transition">
+          Install WeDoCare
+        </button>
+        <p class="text-center text-sm text-slate-600 mt-5">
+          <span id="accountPrompt">New here?</span>
+          <button id="accountModeToggle" type="button" class="font-semibold text-emerald-700 hover:text-emerald-800 underline underline-offset-2">
+            Create an account
+          </button>
+        </p>
+      </form>
+      <p class="text-xs text-white text-center mt-4">Secure sign-in is provided by Supabase. Configure the project before using this site.</p>
+    </div>
+  </section>
+  <div id="siteContent" hidden>
+  <!-- Header / Navigation -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <h1 class="text-xl font-bold text-emerald-600">WeDoCare</h1>
+      </div>
+      <nav class="hidden md:flex space-x-8 text-sm font-semibold text-slate-600">
+        <a href="#hero" class="hover:text-emerald-600 transition">Home</a> |
+        <a href="#plans" class="hover:text-emerald-600 transition">Healthy Meals</a>  |
+        <a href="#contact" class="hover:text-emerald-600 transition">Contact</a>
+      </nav>
+      <button id="signOutButton" type="button" class="text-sm font-semibold text-emerald-700 hover:text-emerald-800">Sign out</button>
+    </div>
+  </header>
+  <main class="flex-grow">
+    <!-- Hero Section -->
+    <section id="hero" class="bg-gradient-to-br from-emerald-50 to-teal-100 py-20 md:py-28">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <span class="text-emerald-700 font-semibold text-sm tracking-wide uppercase bg-emerald-100 px-3 py-1 rounded-full">
+          Science-Backed Natuaral foods for Good health
+        </span>
+        <h1 class="text-4xl md:text-6xl font-extrabold text-slate-900 mt-4 mb-6 leading-tight">
+          Strategize your nutritioal <span class="text-emerald-600"> Intake</span>
+        </h1>
+        <p class="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto mb-8">
+          Personalized nutrition advice and natural meal plans to help you reach your health goals.
+        </p>
+        <div class="flex justify-center flex-wrap gap-4">
+          <a href="#calculator" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition">
+            Important
+          </a>
+          <a href="c:\Users\user\Downloads\Best for Your Kids - Moderate Carbohydrate Foods for Infants.pdf" download="my-file-name.pdf" class="border border-emerald-600 text-emerald-700 font-semibold px-6 py-3 rounded-xl hover:bg-emerald-50 transition">
+            Download PDF
+          </a>
+          <button id="donateButton" type="button" class="bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition">
+            Donate Now
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section id="donationSection" hidden class="bg-white py-12 border-b border-slate-200">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-slate-900 rounded-3xl p-8 shadow-xl text-white">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5 mb-6">
+            <div>
+              <p class="text-emerald-300 text-sm font-semibold uppercase tracking-wide">Support our mission</p>
+              <h2 class="text-3xl font-bold mt-2">Donate with your debit card</h2>
+            </div>
+            <div class="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm text-slate-200">
+              <span class="inline-block h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
+              Secure payment
+            </div>
+          </div>
+
+          <form id="donationForm" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="md:col-span-2">
+              <label for="donationAmount" class="block text-sm font-medium text-slate-200 mb-2">Donation amount</label>
+              <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">$</span>
+                <input id="donationAmount" type="number" min="1" step="1" value="25" class="w-full rounded-xl border border-slate-700 bg-slate-800 text-white pl-8 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="25">
+              </div>
+            </div>
+
+            <div class="md:col-span-2">
+              <label for="cardName" class="block text-sm font-medium text-slate-200 mb-2">Name on card</label>
+              <input id="cardName" type="text" placeholder="Jane Doe" class="w-full rounded-xl border border-slate-700 bg-slate-800 text-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+
+            <div class="md:col-span-2">
+              <label for="cardNumber" class="block text-sm font-medium text-slate-200 mb-2">Debit card number</label>
+              <input id="cardNumber" type="text" inputmode="numeric" maxlength="19" placeholder="1234 5678 9012 3456" class="w-full rounded-xl border border-slate-700 bg-slate-800 text-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+
+            <div>
+              <label for="expiryDate" class="block text-sm font-medium text-slate-200 mb-2">Expiry</label>
+              <input id="expiryDate" type="text" maxlength="5" placeholder="MM/YY" class="w-full rounded-xl border border-slate-700 bg-slate-800 text-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+
+            <div>
+              <label for="cardCvv" class="block text-sm font-medium text-slate-200 mb-2">CVV</label>
+              <input id="cardCvv" type="text" inputmode="numeric" maxlength="4" placeholder="123" class="w-full rounded-xl border border-slate-700 bg-slate-800 text-white px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+
+            <div class="md:col-span-2 flex flex-col sm:flex-row gap-3 pt-2">
+              <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-3 rounded-xl transition">
+                Donate securely
+              </button>
+              <button type="button" id="cancelDonation" class="sm:w-auto border border-slate-600 text-slate-200 hover:bg-slate-800 font-semibold px-6 py-3 rounded-xl transition">
+                Cancel
+              </button>
+            </div>
+          </form>
+
+          <p id="donationStatus" class="mt-5 text-sm text-emerald-300" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+                 <!-- Sample Plans Section -->
+    <section id="plans" class="bg-white py-16 border-t border-slate-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl font-bold text-slate-900">Tailored Nutrition Plans</h2>
+          <p class="text-slate-600 mt-2">Designed by dietary specialists for distinct lifestyle needs.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <!-- Card 1 -->
+          <div class="border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition">
+            <h3 class="text-xl font-bold text-slate-900 mb-2">For infants</h3>
+            <p class="text-sm text-slate-600 mb-4">Focuses on whole foods, lean proteins, and complex carbohydrates for sustained energy throughout the day.</p>
+            <ul class="text-xs text-slate-500 space-y-2 mb-6">
+              <li>✓ High-fiber nutrient density</li>
+              <li>Rich in healthy monounsaturated fats, potassium, and fiber for brain development. Serve as a smooth mash or soft slices.</li>
+              <li>✓ Moderate carbohydrate distribution</li>
+              <li>Starchy vegetables: cooked and mashed sweet potatoes, carrots, butternut squash, or regular potatoes.</li>
+              <li>✓ Heart-healthy unsaturated fats</li>
+              <li>Fish: soft-flaked, low-mercury fish like salmon provides crucial omega-3 fatty acids.</li>
+              <li>Legumes and eggs: mashed beans, lentils, tofu, and well-cooked eggs offer plant-based and animal proteins.</li>
+            </ul>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="border border-emerald-500 rounded-2xl p-6 shadow-sm hover:shadow-md transition relative bg-emerald-50/30">
+            <span class="absolute top-4 right-4 bg-emerald-600 text-white text-xs font-bold px-2 py-1 rounded">Popular</span>
+            <h3 class="text-xl font-bold text-slate-900 mb-2">Low-Carb</h3>
+            <p class="text-sm text-slate-600 mb-4">Optimized for glycemic control and metabolic efficiency by substituting carbohydrates with healthy fats.</p>
+            <ul class="text-xs text-slate-500 space-y-2 mb-6">
+              <li>✓ Controlled insulin response</li>
+              <li>✓ Rich in healthy lipids & avocado</li>
+              <li>✓ Essential micronutrient coverage</li>
+              Key Categories of Low-Carb Foods
+Proteins: Unprocessed meats (beef, lamb, pork, chicken), fish and seafood (salmon, trout, sardines, tuna), and eggs. These contain virtually zero carbs.
+
+Non-Starchy Vegetables: Leafy greens (spinach, kale, lettuce), broccoli, cauliflower, zucchini, cucumbers, bell peppers, and asparagus.
+
+Healthy Fats and Oils: Extra virgin olive oil, avocado oil, coconut oil, and butter.
+
+Dairy Products: Full-fat cheese, Greek yogurt, heavy cream, and butter. (Opt for unsweetened options to avoid added sugars).
+            </ul>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="border border-amber-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition bg-amber-50/30">
+            <h3 class="text-xl font-bold text-slate-900 mb-2">Today's Verse</h3>
+            <p class="text-sm text-slate-700 mb-4 italic">"Trust in the Lord with all your heart and lean not on your own understanding."</p>
+            <p class="text-xs text-slate-500">Proverbs 3:5</p>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="border border-slate-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition">
+                      <h3 class="text-xl font-bold text-slate-900 mb-2">Plant-Based Power</h3>
+            <p class="text-sm text-slate-600 mb-4">Complete vegan nutritional profile utilizing legumes, grains, seeds, and nuts for optimal protein synthesis.</p>
+            <ul class="text-xs text-slate-500 space-y-2 mb-6">
+              <li>✓ 100% Plant-derived nutrients</li>
+              <li>✓ Rich in natural antioxidants</li>
+              <li>✓ Complete amino acid spectrum</li>
+              Complementary Amino Acid Profiles
+Legumes (Lentils, chickpeas, black beans, edamame)
+
+High in: Lysine, Threonine
+
+Low in: Methionine, Cysteine
+
+Grains (Quinoa, brown rice, oats, farro, buckwheat)
+
+High in: Methionine, Cysteine
+
+Low in: Lysine
+
+Seeds (Hemp seeds, chia seeds, pumpkin seeds, flaxseeds)
+
+High in: Methionine, Cysteine, Healthy Fats (Omega-3/6)
+
+Low in: Lysine (varies by seed type)
+
+Nuts (Almonds, walnuts, cashews, Brazil nuts)
+
+High in: Healthy unsaturated fats, Vitamin E, Methionine
+
+Low in: Lysine
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <!-- Image Gallery -->
+  <section class="bg-slate-50 py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-10">
+        <h2 class="text-4xl font-bold text-slate-900">Healthy Inspiration</h2>
+      </div>
+
+      <div class="relative mx-auto max-w-5xl overflow-hidden rounded-3xl shadow-2xl ring-1 ring-slate-200 bg-white">
+        <div id="photoSlider" class="relative h-[420px] md:h-[560px]"></div>
+
+        <button id="prevSlide" type="button" class="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-3 text-2xl text-slate-700 shadow-md transition hover:bg-white" aria-label="Previous photo">&#10094;</button>
+        <button id="nextSlide" type="button" class="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-3 text-2xl text-slate-700 shadow-md transition hover:bg-white" aria-label="Next photo">&#10095;</button>
+
+        <div id="slideDots" class="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2"></div>
+      </div>
+    </div>
+  </section>
+  <!-- Footer -->
+  <footer id="contact" class="bg-slate-900 text-slate-400 py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center sm:flex sm:justify-between sm:text-left">
+      <div>
+        <span class="text-xl font-bold text-white">WeCare</span>
+        <p class="text-xs mt-1">Empowering healthy lifestyles through data and nutrition.</p>
+      </div>
+      <div class="mt-4 sm:mt-0 text-xs">
+        <p>&copy; 2026 WeDoCare. All rights reserved.</p>
+        <p class="text-slate-500 mt-1">Educational content only. </p>
+      </div>
+    </div>
+  </footer>
+  </div>
+  <script type="module">
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    import { SUPABASE_ANON_KEY, SUPABASE_URL } from './supabase-config.js';
+
+    const supabaseConfigured =
+      /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SUPABASE_URL) &&
+      /^(eyJ|sb_publishable_)/.test(SUPABASE_ANON_KEY);
+    const supabaseClient = supabaseConfigured
+      ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+
+    const slideshowImages = [
+      { src: './assets/wecare-background.jpg', alt: 'Fresh vegetables at a market' },
+      { src: './assets/wecare-background-2.jpg', alt: 'A healthy meal with vegetables and eggs' },
+      { src: './assets/wecare-background-3.jpg', alt: 'Refreshing cucumber, lemon, and mint infused water' },
+      { src: './assets/wecare-background.jpg', alt: 'Healthy fruit selection' },
+      { src: './assets/wecare-background-2.jpg', alt: 'Nutritious breakfast spread' },
+      { src: './assets/wecare-background-3.jpg', alt: 'Fresh salad ingredients' },
+      { src: './assets/wecare-background.jpg', alt: 'Balanced meal preparation' },
+      { src: './assets/wecare-background-2.jpg', alt: 'Healthy smoothie ingredients' },
+      { src: './assets/wecare-background-3.jpg', alt: 'Garden vegetables and herbs' },
+      { src: './assets/wecare-background.jpg', alt: 'Whole grain breakfast bowl' },
+      { src: './assets/wecare-background-2.jpg', alt: 'Mediterranean meal setup' },
+      { src: './assets/wecare-background-3.jpg', alt: 'Vibrant plant-based lunch' },
+      { src: './assets/wecare-background.jpg', alt: 'Healthy nutrition choices' },
+      { src: './assets/wecare-background-2.jpg', alt: 'Colorful vegetables and greens' },
+      { src: './assets/wecare-background-3.jpg', alt: 'Fresh ingredients for a wholesome meal' },
+      { src: './assets/wecare-background.jpg', alt: 'Clean eating inspiration' },
+      { src: './assets/wecare-background-2.jpg', alt: 'Well-balanced healthy plate' },
+      { src: './assets/wecare-background-3.jpg', alt: 'Vegetables, fruit, and grains' },
+      { src: './assets/wecare-background.jpg', alt: 'Warm healthy meal preparation' },
+      { src: './assets/wecare-background-2.jpg', alt: 'Lifestyle wellness photography' }
+    ];
+
+    const slider = document.getElementById('photoSlider');
+    const dotsContainer = document.getElementById('slideDots');
+    const prevButton = document.getElementById('prevSlide');
+    const nextButton = document.getElementById('nextSlide');
+
+    let currentSlide = 0;
+    let slideTimer;
+
+    function renderSlider() {
+      slider.innerHTML = '';
+      slideshowImages.forEach((photo, index) => {
+        const slide = document.createElement('div');
+        slide.className = `absolute inset-0 transition-opacity duration-700 ease-in-out ${index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'}`;
+        slide.innerHTML = `
+          <img src="${photo.src}" alt="${photo.alt}" class="h-full w-full object-cover" />
+          <div class="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-slate-900/10 to-transparent"></div>
+        `;
+        slider.appendChild(slide);
+      });
+
+      dotsContainer.innerHTML = '';
+      slideshowImages.forEach((photo, index) => {
+        const dot = document.createElement('button');
+        dot.type = 'button';
+        dot.className = `h-3 w-3 rounded-full transition ${index === currentSlide ? 'bg-emerald-500' : 'bg-white/80 hover:bg-white'}`;
+        dot.setAttribute('aria-label', `Go to slide ${index + 1}`);
+        dot.addEventListener('click', () => {
+          currentSlide = index;
+          renderSlider();
+          restartSlideTimer();
+        });
+        dotsContainer.appendChild(dot);
+      });
+    }
+
+    function showNextSlide() {
+      currentSlide = (currentSlide + 1) % slideshowImages.length;
+      renderSlider();
+      restartSlideTimer();
+    }
+
+    function showPreviousSlide() {
+      currentSlide = (currentSlide - 1 + slideshowImages.length) % slideshowImages.length;
+      renderSlider();
+      restartSlideTimer();
+    }
+
+    function restartSlideTimer() {
+      clearInterval(slideTimer);
+      slideTimer = setInterval(showNextSlide, 4000);
+    }
+
+    prevButton.addEventListener('click', showPreviousSlide);
+    nextButton.addEventListener('click', showNextSlide);
+
+    renderSlider();
+    restartSlideTimer();
+
+    let pendingInstallPrompt;
+    const installButton = document.getElementById('installButton');
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+      event.preventDefault();
+      pendingInstallPrompt = event;
+      installButton.hidden = false;
+    });
+
+    installButton.addEventListener('click', async () => {
+      if (!pendingInstallPrompt) {
+        return;
+      }
+
+      pendingInstallPrompt.prompt();
+      await pendingInstallPrompt.userChoice;
+      pendingInstallPrompt = null;
+      installButton.hidden = true;
+    });
+
+    window.addEventListener('appinstalled', () => {
+      pendingInstallPrompt = null;
+      installButton.hidden = true;
+    });
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js').catch((error) => {
+          console.error('WeDoCare offline support could not be enabled:', error);
+        });
+      });
+    }
+
+    const accountForm = document.getElementById('accountForm');
+    const accountIdentifier = document.getElementById('accountIdentifier');
+    const accountIdentifierLabel = document.getElementById('accountIdentifierLabel');
+    const accountPassword = document.getElementById('accountPassword');
+    const accountPasswordGroup = document.getElementById('accountPasswordGroup');
+    const accountTitle = document.getElementById('accountTitle');
+    const accountSubmit = document.getElementById('accountSubmit');
+    const accountPrompt = document.getElementById('accountPrompt');
+    const accountModeToggle = document.getElementById('accountModeToggle');
+    const forgotPasswordButton = document.getElementById('forgotPasswordButton');
+    const accountMessage = document.getElementById('accountMessage');
+    const accountEmailGroup = document.getElementById('accountEmailGroup');
+    const accountEmail = document.getElementById('accountEmail');
+    const accountPasswordHelp = document.getElementById('accountPasswordHelp');
+    const signOutButton = document.getElementById('signOutButton');
+    const donationButton = document.getElementById('donateButton');
+    const donationSection = document.getElementById('donationSection');
+    const donationForm = document.getElementById('donationForm');
+    const donationStatus = document.getElementById('donationStatus');
+    const cancelDonationButton = document.getElementById('cancelDonation');
+    let accountMode = 'signin';
+    let handlingPasswordRecovery = false;
+
+    function updateAccountStatus(message, isError = false) {
+      accountMessage.textContent = message;
+      accountMessage.className = `text-sm mt-4 ${isError ? 'text-red-600' : 'text-emerald-700'}`;
+    }
+
+    function validateIdentifier() {
+      const identifier = accountIdentifier.value.trim();
+      const isValidUsername = /^[a-z0-9._-]{3,20}$/i.test(identifier);
+      const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+      const isValidIdentifier = accountMode === 'create'
+        ? isValidUsername || isValidEmail
+        : identifier.includes('@')
+          ? isValidEmail
+          : isValidUsername;
+      accountIdentifier.setCustomValidity(
+        isValidIdentifier || !identifier
+          ? ''
+          : accountMode === 'create'
+            ? 'Choose a 3–20 character username using letters, numbers, dot, underscore, or hyphen.'
+            : 'Enter a valid email address or a 3–20 character username (letters, numbers, dot, underscore, or hyphen).'
+      );
+      return isValidIdentifier ? identifier.toLowerCase() : '';
+    }
+
+    accountIdentifier.addEventListener('input', () => {
+      validateIdentifier();
+      if (accountMode === 'create') {
+        const identifierIsEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountIdentifier.value.trim());
+        accountEmailGroup.hidden = identifierIsEmail;
+        accountEmail.required = !identifierIsEmail;
+      }
+      accountIdentifier.setCustomValidity('');
+      accountMessage.textContent = '';
+    });
+
+    function setAccountMode(mode) {
+      accountMode = mode;
+      const isCreatingAccount = mode === 'create';
+      const isRecoveringPassword = mode === 'recover';
+      const isUpdatingPassword = mode === 'updatePassword';
+      const isPasswordRecoveryMode = isRecoveringPassword || isUpdatingPassword;
+      accountTitle.textContent = isCreatingAccount
+        ? 'Create an account'
+        : isRecoveringPassword
+          ? 'Reset your password'
+          : isUpdatingPassword
+            ? 'Choose a new password'
+            : 'Sign in';
+      accountSubmit.textContent = isCreatingAccount
+        ? 'Create account'
+        : isRecoveringPassword
+          ? 'Send recovery email'
+          : isUpdatingPassword
+            ? 'Update password'
+            : 'Sign in';
+      accountPassword.autocomplete = isCreatingAccount || isUpdatingPassword
+        ? 'new-password'
+        : 'current-password';
+      accountPassword.value = '';
+      accountPassword.required = !isRecoveringPassword;
+      accountPasswordGroup.hidden = isRecoveringPassword;
+      const identifierIsEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountIdentifier.value.trim());
+      accountEmailGroup.hidden = !isCreatingAccount || identifierIsEmail;
+      accountEmail.required = isCreatingAccount && !identifierIsEmail;
+      accountIdentifierLabel.textContent = isCreatingAccount
+        ? 'Username or email address'
+        : 'Username or email address';
+      accountIdentifier.placeholder = isCreatingAccount
+        ? 'Username or you@example.com'
+        : 'Username or you@example.com';
+      accountPrompt.hidden = isPasswordRecoveryMode;
+      accountModeToggle.hidden = isUpdatingPassword;
+      accountPrompt.textContent = isCreatingAccount ? 'Already have an account?' : 'New here?';
+      accountModeToggle.textContent = isPasswordRecoveryMode
+        ? 'Back to sign in'
+        : isCreatingAccount
+          ? 'Sign in'
+          : 'Create an account';
+      forgotPasswordButton.hidden = isCreatingAccount || isPasswordRecoveryMode;
+      accountPasswordHelp.textContent = isRecoveringPassword
+        ? 'We will email a secure password reset link.'
+        : 'Use 6–10 characters, with at least one letter and one number.';
+      accountIdentifier.setCustomValidity('');
+      accountEmail.setCustomValidity('');
+      accountPassword.setCustomValidity('');
+      updateAccountStatus('');
+    }
+
+    accountModeToggle.addEventListener('click', () => {
+      setAccountMode(accountMode === 'create' || accountMode === 'recover' ? 'signin' : 'create');
+    });
+
+    forgotPasswordButton.addEventListener('click', () => {
+      setAccountMode('recover');
+    });
+
+    function showAuthenticatedSite() {
+      document.getElementById('loginScreen').hidden = true;
+      document.getElementById('siteContent').hidden = false;
+    }
+
+    if (supabaseClient) {
+      supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'PASSWORD_RECOVERY') {
+          handlingPasswordRecovery = true;
+          setAccountMode('updatePassword');
+          updateAccountStatus('Choose a new password to finish resetting your account.');
+        } else if (event === 'SIGNED_IN' && session && !handlingPasswordRecovery) {
+          showAuthenticatedSite();
+        } else if (event === 'SIGNED_OUT') {
+          document.getElementById('siteContent').hidden = true;
+          document.getElementById('loginScreen').hidden = false;
+        }
+      });
+
+      supabaseClient.auth.getSession().then(({ data, error }) => {
+        if (error) {
+          updateAccountStatus(`Could not restore your sign-in: ${error.message}`, true);
+        } else if (data.session && !handlingPasswordRecovery) {
+          showAuthenticatedSite();
+        }
+      });
+    } else {
+      updateAccountStatus(
+        'Authentication is not configured. Add your Supabase project URL and publishable/anon key to supabase-config.js.',
+        true
+      );
+    }
+
+    signOutButton.addEventListener('click', async () => {
+      if (!supabaseClient) {
+        updateAccountStatus('Authentication is not configured.', true);
+        return;
+      }
+      try {
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) {
+          throw error;
+        }
+      } catch (error) {
+        console.error('Supabase sign-out failed:', error);
+        updateAccountStatus(`Could not sign out: ${error instanceof Error ? error.message : String(error)}`, true);
+      }
+    });
+
+    accountForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const identifier = validateIdentifier();
+      if (!supabaseClient) {
+        updateAccountStatus(
+          'Authentication is not configured. Add your Supabase project URL and publishable/anon key to supabase-config.js.',
+          true
+        );
+        return;
+      }
+      if (!identifier || !accountForm.reportValidity()) {
+        return;
+      }
+      accountPassword.setCustomValidity('');
+
+      try {
+        if (accountMode === 'create') {
+          const identifierIsEmail = identifier.includes('@');
+          const { data, error } = await supabaseClient.auth.signUp({
+            email: identifierIsEmail ? identifier : accountEmail.value.trim(),
+            password: accountPassword.value,
+            options: {
+              data: identifierIsEmail ? {} : { username: identifier },
+              emailRedirectTo: window.location.href.split('#')[0]
+            }
+          });
+          if (error) {
+            updateAccountStatus(error.message, true);
+            return;
+          }
+          if (data.session) {
+            showAuthenticatedSite();
+          } else {
+            setAccountMode('signin');
+            updateAccountStatus('Check your email for a confirmation link, then sign in.');
+          }
+          return;
+        }
+
+        if (accountMode === 'recover') {
+          const redirectTo = window.location.href.split('#')[0];
+          if (identifier.includes('@')) {
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(identifier, { redirectTo });
+            if (error) {
+              updateAccountStatus(error.message, true);
+              return;
+            }
+          } else {
+            const { error } = await supabaseClient.functions.invoke('account-bridge', {
+              body: { action: 'recover', identifier, redirectTo }
+            });
+            if (error) {
+              updateAccountStatus(error.message, true);
+              return;
+            }
+          }
+          updateAccountStatus('If an account exists for that address or username, a password reset link will be emailed.');
+          return;
+        }
+
+        if (accountMode === 'updatePassword') {
+          const { error } = await supabaseClient.auth.updateUser({ password: accountPassword.value });
+          if (error) {
+            updateAccountStatus(error.message, true);
+            return;
+          }
+          handlingPasswordRecovery = false;
+          await supabaseClient.auth.signOut();
+          accountForm.reset();
+          setAccountMode('signin');
+          updateAccountStatus('Password updated. Sign in with your new password.');
+          return;
+        }
+
+        let authError;
+        if (identifier.includes('@')) {
+          const { error } = await supabaseClient.auth.signInWithPassword({
+            email: identifier,
+            password: accountPassword.value
+          });
+          authError = error;
+        } else {
+          const { data, error } = await supabaseClient.functions.invoke('account-bridge', {
+            body: { action: 'sign-in-username', username: identifier, password: accountPassword.value }
+          });
+          if (error) {
+            authError = error;
+          } else {
+            const { error: sessionError } = await supabaseClient.auth.setSession(data.session);
+            authError = sessionError;
+          }
+        }
+        if (authError) {
+          updateAccountStatus(authError.message, true);
+          return;
+        }
+        const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError) {
+          updateAccountStatus(sessionError.message, true);
+          return;
+        }
+        if (sessionData.session) {
+          showAuthenticatedSite();
+        } else {
+          updateAccountStatus('Sign-in completed without an active session. Please try again.', true);
+        }
+      } catch (error) {
+        console.error('Supabase authentication request failed:', error);
+        updateAccountStatus(`Authentication request failed: ${error instanceof Error ? error.message : String(error)}`, true);
+      }
+    });
+
+    donationButton.addEventListener('click', () => {
+      donationSection.hidden = false;
+      donationSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    donationForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+
+      const amount = Number(document.getElementById('donationAmount').value);
+      const cardName = document.getElementById('cardName').value.trim();
+      const cardNumber = document.getElementById('cardNumber').value.replace(/\s+/g, '');
+      const expiry = document.getElementById('expiryDate').value.trim();
+      const cvv = document.getElementById('cardCvv').value.trim();
+
+      if (!amount || amount < 1 || !cardName || cardNumber.length < 12 || !expiry || !cvv) {
+        donationStatus.textContent = 'Please complete the debit card donation form correctly.';
+        donationStatus.className = 'mt-5 text-sm text-red-300';
+        return;
+      }
+
+      donationStatus.textContent = `Thank you, ${cardName}! Your $${amount} debit card donation has been submitted.`;
+      donationStatus.className = 'mt-5 text-sm text-emerald-300';
+      donationForm.reset();
+      document.getElementById('donationAmount').value = '25';
+    });
+
+    cancelDonationButton.addEventListener('click', () => {
+      donationForm.reset();
+      donationStatus.textContent = '';
+      donationSection.hidden = true;
+    });
+  </script>
+</body>
